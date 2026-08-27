@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, type MotionProps, motion } from 'motion/react';
-import { useAgent, useSessionContext, useSessionMessages } from '@livekit/components-react';
+import { useAgent, useDataChannel, useSessionContext, useSessionMessages } from '@livekit/components-react';
 import { AgentChatTranscript } from '@/components/agents-ui/agent-chat-transcript';
 import {
   AgentControlBar,
@@ -181,8 +181,25 @@ export function AgentSessionView_01({
   const session = useSessionContext();
   const { messages } = useSessionMessages(session);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [sourceSnippets, setSourceSnippets] = useState<Record<string, string>>({});
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { state: agentState } = useAgent();
+
+  const onGrounding = useCallback((msg: { payload: Uint8Array }) => {
+    try {
+      const parsed = JSON.parse(new TextDecoder().decode(msg.payload)) as {
+        reply_text?: string;
+        source_snippet?: string;
+      };
+      const reply = parsed.reply_text?.trim();
+      const snippet = parsed.source_snippet?.trim();
+      if (!reply || !snippet) return;
+      setSourceSnippets((prev) => (prev[reply] === snippet ? prev : { ...prev, [reply]: snippet }));
+    } catch {
+      /* ignore malformed grounding packets */
+    }
+  }, []);
+  useDataChannel('source_grounding', onGrounding);
 
   const controls: AgentControlBarControls = {
     leave: true,
@@ -218,6 +235,7 @@ export function AgentSessionView_01({
             <AgentChatTranscript
               agentState={agentState}
               messages={messages}
+              sourceSnippets={sourceSnippets}
               className="mx-auto max-w-2xl **:data-[slot=message-scroller-content]:p-4 **:data-[slot=message-scroller-content]:pt-40! md:**:data-[slot=message-scroller-content]:p-6"
             />
           </motion.div>

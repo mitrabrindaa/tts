@@ -63,7 +63,12 @@ async def codeswitch_report_agent(ctx: agents.JobContext) -> None:
         ),
     )
 
-    attach_transcript_logger(session, session_id=ctx.room.name or "console")
+    attach_transcript_logger(
+        session,
+        session_id=ctx.room.name or "console",
+        room=ctx.room,
+        document_text=document_text,
+    )
 
     await session.start(
         room=ctx.room,

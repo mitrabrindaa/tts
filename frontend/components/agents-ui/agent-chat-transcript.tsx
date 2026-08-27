@@ -56,6 +56,10 @@ export interface AgentChatTranscriptProps
    */
   messages?: ReceivedMessage[];
   /**
+   * Document snippets keyed by assistant reply text (from the agent data channel).
+   */
+  sourceSnippets?: Record<string, string>;
+  /**
    * Additional CSS class names to apply to the conversation container.
    */
   className?: string;
@@ -91,6 +95,7 @@ export function AgentChatTranscript({
   spacerClassName,
   agentState,
   messages = [],
+  sourceSnippets = {},
   className,
   ...props
 }: AgentChatTranscriptProps) {
@@ -136,6 +141,12 @@ export function AgentChatTranscript({
                           <Streamdown>{message}</Streamdown>
                         </BubbleContent>
                       </Bubble>
+                      {!isUser && sourceSnippets[message.trim()] && (
+                        <details className="text-muted-foreground mt-1 max-w-sm text-left text-xs leading-5">
+                          <summary className="cursor-pointer select-none">Source</summary>
+                          <p className="mt-1 whitespace-pre-wrap">{sourceSnippets[message.trim()]}</p>
+                        </details>
+                      )}
                     </MessageContent>
                   </Message>
                 </MessageScrollerItem>
