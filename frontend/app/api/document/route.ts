@@ -2,14 +2,18 @@ import { randomUUID } from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { NextResponse } from 'next/server';
+import { ocrPdfWithSarvam } from '@/lib/sarvam-ocr';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// Digitise is an async poll job; default Hobby timeout is too short.
+export const maxDuration = 60;
 
 const ALLOWED = new Set(['.pdf', '.txt', '.md', '.csv']);
 // Vercel serverless request body limit is ~4.5 MB on Hobby.
 const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_CHARS = 2_500;
+const NEAR_EMPTY_CHARS = 40;
 
 function uploadsDir() {
   // On Vercel the filesystem is ephemeral/read-only except /tmp.
@@ -63,7 +67,13 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const documentText = await extractText(ext, buffer);
+    let documentText = await extractText(ext, buffer);
+    if (ext === '.pdf' && documentText.length < NEAR_EMPTY_CHARS) {
+      const ocrText = await ocrPdfWithSarvam(buffer, originalName);
+      if (ocrText) {
+        documentText = truncate(ocrText);
+      }
+    }
     if (!documentText) {
       return NextResponse.json(
         {
