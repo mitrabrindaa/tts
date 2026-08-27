@@ -18,6 +18,12 @@ import {
   type UploadedDocument,
 } from '@/lib/document-session';
 import { SESSION_LANGUAGES } from '@/lib/languages';
+import {
+  clearTranscriptSnapshot,
+  downloadTextFile,
+  loadTranscriptSnapshot,
+  transcriptToTxt,
+} from '@/lib/session-transcript';
 
 function WelcomeImage() {
   return (
@@ -62,6 +68,8 @@ export const WelcomeView = ({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState(() => languageProp ?? loadSessionLanguage());
+  const [transcript, setTranscript] = useState(() => loadTranscriptSnapshot());
+  const [showTranscript, setShowTranscript] = useState(false);
 
   function clearDoc() {
     clearUploadedDocument();
@@ -201,6 +209,74 @@ export const WelcomeView = ({
         >
           {filename ? startButtonText : 'Start with sample report'}
         </Button>
+
+        {transcript && (
+          <div className="mt-6 w-72 text-left">
+            <p className="text-muted-foreground mb-2 text-xs">Last session transcript</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTranscript((open) => !open)}
+              >
+                {showTranscript ? 'Hide transcript' : 'View transcript'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  downloadTextFile(
+                    `transcript-${transcript.roomName}.txt`,
+                    transcriptToTxt(transcript),
+                    'text/plain;charset=utf-8'
+                  )
+                }
+              >
+                .txt
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  downloadTextFile(
+                    `transcript-${transcript.roomName}.json`,
+                    `${JSON.stringify(transcript, null, 2)}\n`,
+                    'application/json'
+                  )
+                }
+              >
+                .json
+              </Button>
+            </div>
+            {showTranscript && (
+              <ol className="border-border mt-3 max-h-48 list-none overflow-auto rounded-md border p-3 text-left text-xs leading-5">
+                {transcript.turns.map((turn, index) => (
+                  <li key={`${turn.ts}-${index}`} className="mb-3 last:mb-0">
+                    <span className="font-medium capitalize">{turn.role}</span>
+                    <p className="text-foreground mt-0.5 whitespace-pre-wrap">{turn.text}</p>
+                    {turn.source_snippet && (
+                      <p className="text-muted-foreground mt-1">Source: {turn.source_snippet}</p>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                clearTranscriptSnapshot();
+                setTranscript(null);
+                setShowTranscript(false);
+              }}
+              className="text-muted-foreground mt-2 text-xs underline underline-offset-2"
+            >
+              Dismiss transcript
+            </button>
+          </div>
+        )}
       </section>
 
       <div className="fixed bottom-5 left-0 flex w-full items-center justify-center">

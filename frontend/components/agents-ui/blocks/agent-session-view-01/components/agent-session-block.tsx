@@ -9,6 +9,7 @@ import {
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
 import { cn } from '@/lib/shadcn/utils';
+import { saveTranscriptSnapshot, snapshotFromSession } from '@/lib/session-transcript';
 import { TileLayout } from './tile-view';
 
 const BOTTOM_VIEW_MOTION_PROPS: MotionProps = {
@@ -282,7 +283,15 @@ export function AgentSessionView_01({
             controls={controls}
             isChatOpen={isChatOpen}
             isConnected={session.isConnected}
-            onDisconnect={session.end}
+            onDisconnect={() => {
+              const snap = snapshotFromSession({
+                roomName: session.room?.name,
+                messages,
+                sourceSnippets,
+              });
+              if (snap) saveTranscriptSnapshot(snap);
+              void session.end();
+            }}
             onIsChatOpenChange={setIsChatOpen}
           />
         </div>
