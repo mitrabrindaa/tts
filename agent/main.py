@@ -36,20 +36,22 @@ server = AgentServer()
 
 @server.rtc_session(agent_name="codeswitch-report-agent")
 async def codeswitch_report_agent(ctx: agents.JobContext) -> None:
-    filename, document_text, is_uploaded = load_document_context(ctx.job.metadata)
+    filename, document_text, is_uploaded, language = load_document_context(ctx.job.metadata)
     instructions = build_system_instructions(
-        document_text, filename=filename, is_uploaded=is_uploaded
+        document_text, filename=filename, is_uploaded=is_uploaded, language=language
     )
-    greeting = build_greeting_instructions(filename, is_uploaded=is_uploaded)
+    greeting = build_greeting_instructions(
+        filename, is_uploaded=is_uploaded, language=language
+    )
 
     session = AgentSession(
-        stt=create_stt(),
+        stt=create_stt(language),
         llm=groq.LLM(
             model="llama-3.1-8b-instant",
             # 80 was cutting mid-sentence / mid-paragraph during TTS.
             max_completion_tokens=256,
         ),
-        tts=create_tts(),
+        tts=create_tts(language),
         vad=silero.VAD.load(
             min_speech_duration=0.2,
             min_silence_duration=0.65,

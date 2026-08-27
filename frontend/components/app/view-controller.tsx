@@ -32,9 +32,16 @@ const VIEW_MOTION_PROPS = {
 interface ViewControllerProps {
   appConfig: AppConfig;
   onDocumentChange?: (doc: UploadedDocument | null) => void;
+  language?: string;
+  onLanguageChange?: (code: string) => void;
 }
 
-export function ViewController({ appConfig, onDocumentChange }: ViewControllerProps) {
+export function ViewController({
+  appConfig,
+  onDocumentChange,
+  language,
+  onLanguageChange,
+}: ViewControllerProps) {
   const { isConnected, start } = useSessionContext();
   const { resolvedTheme } = useTheme();
 
@@ -48,6 +55,8 @@ export function ViewController({ appConfig, onDocumentChange }: ViewControllerPr
           startButtonText={appConfig.startButtonText}
           onStartCall={start}
           onDocumentChange={onDocumentChange}
+          language={language}
+          onLanguageChange={onLanguageChange}
         />
       )}
       {/* Session view */}

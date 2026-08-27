@@ -1,12 +1,14 @@
-"""Sarvam STT configured for Hindi/Bengali/English code-mixing."""
+"""Sarvam STT configured for Indic/English code-mixing."""
 
 from livekit.plugins import sarvam
 
+from languages import DEFAULT_LANGUAGE, normalize_language
 
-def create_stt() -> sarvam.STT:
+
+def create_stt(language: str = DEFAULT_LANGUAGE) -> sarvam.STT:
     # Middle ground: ignore tiny noise pops, but still catch normal speech.
     return sarvam.STT(
-        language="hi-IN",
+        language=normalize_language(language),
         model="saaras:v3",
         mode="codemix",
         sample_rate=16000,

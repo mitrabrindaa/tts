@@ -6,6 +6,7 @@ import {
   type VideoGrant,
 } from 'livekit-server-sdk';
 import { RoomAgentDispatch, RoomConfiguration } from '@livekit/protocol';
+import { DEFAULT_LANGUAGE, normalizeLanguage } from '@/lib/languages';
 
 type ConnectionDetails = {
   serverUrl: string;
@@ -25,6 +26,23 @@ function httpHost(livekitUrl: string): string {
   return livekitUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
 }
 
+function mergeLanguageIntoMetadata(metadata: string | undefined, bodyLanguage: unknown): string {
+  let parsed: Record<string, unknown> = {};
+  if (metadata && metadata.trim()) {
+    try {
+      const value: unknown = JSON.parse(metadata);
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        parsed = value as Record<string, unknown>;
+      }
+    } catch {
+      parsed = { version: metadata };
+    }
+  }
+  const fromMeta = parsed.language;
+  parsed.language = normalizeLanguage(bodyLanguage ?? fromMeta ?? DEFAULT_LANGUAGE);
+  return JSON.stringify(parsed);
+}
+
 export async function POST(req: Request) {
   try {
     if (!LIVEKIT_URL) throw new Error('LIVEKIT_URL is not defined');
@@ -37,8 +55,10 @@ export async function POST(req: Request) {
     const agentName =
       (agentFromBody?.agent_name || agentFromBody?.agentName || DEFAULT_AGENT_NAME).trim() ||
       DEFAULT_AGENT_NAME;
-    const agentMetadata =
-      typeof agentFromBody?.metadata === 'string' ? agentFromBody.metadata : undefined;
+    const agentMetadata = mergeLanguageIntoMetadata(
+      typeof agentFromBody?.metadata === 'string' ? agentFromBody.metadata : undefined,
+      body?.language
+    );
 
     const participantName = 'user';
     const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
@@ -54,7 +74,7 @@ export async function POST(req: Request) {
       agents: [
         new RoomAgentDispatch({
           agentName,
-          metadata: agentMetadata ?? '',
+          metadata: agentMetadata,
         }),
       ],
     });

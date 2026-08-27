@@ -3,11 +3,21 @@
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   clearUploadedDocument,
+  loadSessionLanguage,
   loadUploadedDocument,
+  saveSessionLanguage,
   saveUploadedDocument,
   type UploadedDocument,
 } from '@/lib/document-session';
+import { SESSION_LANGUAGES } from '@/lib/languages';
 
 function WelcomeImage() {
   return (
@@ -31,12 +41,16 @@ interface WelcomeViewProps {
   startButtonText: string;
   onStartCall: () => void;
   onDocumentChange?: (doc: UploadedDocument | null) => void;
+  language?: string;
+  onLanguageChange?: (code: string) => void;
 }
 
 export const WelcomeView = ({
   startButtonText,
   onStartCall,
   onDocumentChange,
+  language: languageProp,
+  onLanguageChange,
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +61,7 @@ export const WelcomeView = ({
   );
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState(() => languageProp ?? loadSessionLanguage());
 
   function clearDoc() {
     clearUploadedDocument();
@@ -115,8 +130,8 @@ export const WelcomeView = ({
           Ask about your document
         </h1>
         <p className="text-muted-foreground max-w-md pt-2 text-sm leading-6">
-          Upload a PDF or text report, then speak in Hindi, Bengali, English — or mix them. The
-          agent answers only from your document.
+          Upload a PDF or text report, pick your language, then speak in that language, English, or
+          mix them. The agent answers only from your document.
         </p>
 
         <input
@@ -152,6 +167,32 @@ export const WelcomeView = ({
             Clear document (use sample report)
           </button>
         )}
+
+        <div className="mt-4 w-72 text-left">
+          <label htmlFor="session-language" className="text-muted-foreground mb-1.5 block text-xs">
+            Spoken language
+          </label>
+          <Select
+            value={language}
+            onValueChange={(value) => {
+              if (!value) return;
+              saveSessionLanguage(value);
+              setLanguage(value);
+              onLanguageChange?.(value);
+            }}
+          >
+            <SelectTrigger id="session-language" className="w-72">
+              <SelectValue placeholder="Hindi" />
+            </SelectTrigger>
+            <SelectContent>
+              {SESSION_LANGUAGES.map((item) => (
+                <SelectItem key={item.code} value={item.code}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <Button
           size="lg"

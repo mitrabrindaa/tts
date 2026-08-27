@@ -14,7 +14,9 @@ import { useDebugMode } from '@/hooks/useDebug';
 import {
   buildAgentMetadata,
   documentFingerprint,
+  loadSessionLanguage,
   loadUploadedDocument,
+  saveSessionLanguage,
   type UploadedDocument,
 } from '@/lib/document-session';
 import { getSandboxTokenSource } from '@/lib/utils';
@@ -36,6 +38,7 @@ export function App({ appConfig }: AppProps) {
   const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(() =>
     loadUploadedDocument()
   );
+  const [language, setLanguage] = useState(() => loadSessionLanguage());
   const docKey = documentFingerprint(uploadedDocument);
 
   const tokenSource = useMemo(() => {
@@ -48,13 +51,14 @@ export function App({ appConfig }: AppProps) {
     return TokenSource.custom(async (options) => {
       const doc = loadUploadedDocument();
       const agentName = options.agentName ?? appConfig.agentName;
-      const agentMetadata = buildAgentMetadata(doc) ?? options.agentMetadata;
+      const sessionLanguage = loadSessionLanguage();
+      const agentMetadata = buildAgentMetadata(doc, sessionLanguage);
 
       const roomConfig = {
         agents: [
           {
             agent_name: agentName,
-            ...(agentMetadata ? { metadata: agentMetadata } : {}),
+            metadata: agentMetadata,
           },
         ],
       };
@@ -62,7 +66,7 @@ export function App({ appConfig }: AppProps) {
       const res = await fetch('/api/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_config: roomConfig }),
+        body: JSON.stringify({ room_config: roomConfig, language: sessionLanguage }),
       });
       const raw = await res.text();
       let data: {
@@ -90,12 +94,12 @@ export function App({ appConfig }: AppProps) {
         participantToken: data.participantToken,
       };
     });
-  }, [appConfig, docKey]);
+  }, [appConfig, docKey, language]);
 
   const session = useSession(tokenSource, {
     ...(appConfig.agentName ? { agentName: appConfig.agentName } : {}),
     // Include fingerprint so option equality also busts any internal token cache.
-    agentMetadata: buildAgentMetadata(uploadedDocument) ?? `sample:${docKey}`,
+    agentMetadata: buildAgentMetadata(uploadedDocument, language),
     agentConnectTimeoutMilliseconds: 45_000,
   });
 
@@ -103,7 +107,15 @@ export function App({ appConfig }: AppProps) {
     <AgentSessionProvider session={session}>
       <AppSetup />
       <main className="grid h-svh grid-cols-1 place-content-center">
-        <ViewController appConfig={appConfig} onDocumentChange={setUploadedDocument} />
+        <ViewController
+          appConfig={appConfig}
+          onDocumentChange={setUploadedDocument}
+          language={language}
+          onLanguageChange={(code) => {
+            saveSessionLanguage(code);
+            setLanguage(code);
+          }}
+        />
       </main>
       <StartAudioButton label="Start Audio" />
       <Toaster
