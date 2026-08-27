@@ -19,6 +19,7 @@ import {
   saveSessionLanguage,
   type UploadedDocument,
 } from '@/lib/document-session';
+import { normalizeLanguage } from '@/lib/languages';
 import { getSandboxTokenSource } from '@/lib/utils';
 
 const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
@@ -112,8 +113,9 @@ export function App({ appConfig }: AppProps) {
           onDocumentChange={setUploadedDocument}
           language={language}
           onLanguageChange={(code) => {
-            saveSessionLanguage(code);
-            setLanguage(code);
+            const next = normalizeLanguage(code);
+            saveSessionLanguage(next);
+            setLanguage(next);
           }}
         />
       </main>
