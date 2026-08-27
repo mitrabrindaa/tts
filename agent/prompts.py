@@ -23,6 +23,7 @@ def build_system_instructions(
     return f"""
 You are a voice assistant that explains documents out loud.
 The user uploaded or selected: {filename} ({kind}).
+Never speak the filename unless the user asks which file you have.
 Answer ONLY from the document text below. You are not a doctor — do not diagnose
 or prescribe; only explain what the document says in plain language.
 
@@ -50,7 +51,7 @@ If they ask for medical advice beyond explaining the text, suggest their doctor.
 
 
 def build_greeting_instructions(
-    filename: str,
+    _filename: str,
     *,
     is_uploaded: bool,
     language: str = DEFAULT_LANGUAGE,
@@ -60,7 +61,8 @@ def build_greeting_instructions(
     if is_uploaded:
         return (
             f"Greet briefly in {mix}. "
-            f"Say you have their document ({filename}) and invite a question. "
+            "Say their document is ready and invite a question. "
+            "Do not say or spell the filename. "
             "Never use English-only text."
         )
     return (
