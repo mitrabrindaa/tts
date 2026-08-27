@@ -47,7 +47,8 @@ async def codeswitch_report_agent(ctx: agents.JobContext) -> None:
     session = AgentSession(
         stt=create_stt(language),
         llm=groq.LLM(
-            model="llama-3.1-8b-instant",
+            # Groq retired llama-3.1-8b-instant on 2026-08-16.
+            model="openai/gpt-oss-20b",
             # 80 was cutting mid-sentence / mid-paragraph during TTS.
             max_completion_tokens=256,
         ),

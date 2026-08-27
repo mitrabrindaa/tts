@@ -130,88 +130,90 @@ export const WelcomeView = ({
   }
 
   return (
-    <div ref={ref}>
-      <section className="bg-background flex flex-col items-center justify-center px-4 text-center">
-        <WelcomeImage />
+    <div ref={ref} className="bg-background flex min-h-svh w-full flex-col">
+      <section className="mx-auto my-auto flex w-full max-w-md flex-col items-center px-4 py-12 text-center">
+        <div className="flex w-full flex-col items-center">
+          <WelcomeImage />
 
-        <h1 className="text-foreground max-w-prose pt-1 text-2xl leading-8 font-semibold tracking-tight">
-          Ask about your document
-        </h1>
-        <p className="text-muted-foreground max-w-md pt-2 text-sm leading-6">
-          Upload a PDF or text report, pick your language, then speak in that language, English, or
-          mix them. The agent answers only from your document.
-        </p>
+          <h1 className="text-foreground max-w-prose pt-1 text-2xl leading-8 font-semibold tracking-tight">
+            Ask about your document
+          </h1>
+          <p className="text-muted-foreground max-w-md pt-2 text-sm leading-6">
+            Upload a PDF or text report, pick your language, then speak in that language, English, or
+            mix them. The agent answers only from your document.
+          </p>
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".pdf,.txt,.md,.csv,application/pdf,text/plain"
-          className="hidden"
-          onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-        />
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.txt,.md,.csv,application/pdf,text/plain"
+            className="hidden"
+            onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+          />
 
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-          className="mt-6 w-72 rounded-full font-mono text-xs font-bold tracking-wider uppercase"
-        >
-          {uploading ? 'Uploading…' : filename ? 'Replace document' : 'Upload PDF or TXT'}
-        </Button>
-
-        {filename && (
-          <p className="text-foreground mt-3 max-w-sm truncate text-sm font-medium">{filename}</p>
-        )}
-        {status && <p className="text-muted-foreground mt-1 max-w-sm text-xs">{status}</p>}
-        {error && <p className="text-destructive mt-2 max-w-sm text-xs">{error}</p>}
-        {filename && (
-          <button
+          <Button
             type="button"
-            onClick={clearDoc}
-            className="text-muted-foreground mt-2 text-xs underline underline-offset-2"
+            variant="outline"
+            size="lg"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="mt-6 w-72 rounded-full font-mono text-xs font-bold tracking-wider uppercase"
           >
-            Clear document (use sample report)
-          </button>
-        )}
+            {uploading ? 'Uploading…' : filename ? 'Replace document' : 'Upload PDF or TXT'}
+          </Button>
 
-        <div className="mt-4 w-72 text-left">
-          <label htmlFor="session-language" className="text-muted-foreground mb-1.5 block text-xs">
-            Spoken language
-          </label>
-          <Select
-            value={language}
-            onValueChange={(value) => {
-              if (!value) return;
-              saveSessionLanguage(value);
-              setLanguage(value);
-              onLanguageChange?.(value);
-            }}
+          {filename && (
+            <p className="text-foreground mt-3 max-w-sm truncate text-sm font-medium">{filename}</p>
+          )}
+          {status && <p className="text-muted-foreground mt-1 max-w-sm text-xs leading-5">{status}</p>}
+          {error && <p className="text-destructive mt-2 max-w-sm text-xs">{error}</p>}
+          {filename && (
+            <button
+              type="button"
+              onClick={clearDoc}
+              className="text-muted-foreground mt-2 text-xs underline underline-offset-2"
+            >
+              Clear document (use sample report)
+            </button>
+          )}
+
+          <div className="mt-6 w-72 text-left">
+            <label htmlFor="session-language" className="text-muted-foreground mb-1.5 block text-xs">
+              Spoken language
+            </label>
+            <Select
+              value={language}
+              onValueChange={(value) => {
+                if (!value) return;
+                saveSessionLanguage(value);
+                setLanguage(value);
+                onLanguageChange?.(value);
+              }}
+            >
+              <SelectTrigger id="session-language" className="w-72">
+                <SelectValue placeholder="Hindi" />
+              </SelectTrigger>
+              <SelectContent>
+                {SESSION_LANGUAGES.map((item) => (
+                  <SelectItem key={item.code} value={item.code}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            size="lg"
+            onClick={onStartCall}
+            className="mt-6 w-72 rounded-full font-mono text-xs font-bold tracking-wider uppercase"
           >
-            <SelectTrigger id="session-language" className="w-72">
-              <SelectValue placeholder="Hindi" />
-            </SelectTrigger>
-            <SelectContent>
-              {SESSION_LANGUAGES.map((item) => (
-                <SelectItem key={item.code} value={item.code}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {filename ? startButtonText : 'Start with sample report'}
+          </Button>
         </div>
 
-        <Button
-          size="lg"
-          onClick={onStartCall}
-          className="mt-4 w-72 rounded-full font-mono text-xs font-bold tracking-wider uppercase"
-        >
-          {filename ? startButtonText : 'Start with sample report'}
-        </Button>
-
         {transcript && (
-          <div className="mt-6 w-72 text-left">
+          <div className="mt-8 mb-2 w-full text-left">
             <p className="text-muted-foreground mb-2 text-xs">Last session transcript</p>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -252,7 +254,7 @@ export const WelcomeView = ({
               </Button>
             </div>
             {showTranscript && (
-              <ol className="border-border mt-3 max-h-48 list-none overflow-auto rounded-md border p-3 text-left text-xs leading-5">
+              <ol className="border-border bg-muted/40 mt-3 max-h-56 list-none overflow-auto rounded-md border p-3 text-left text-xs leading-5">
                 {transcript.turns.map((turn, index) => (
                   <li key={`${turn.ts}-${index}`} className="mb-3 last:mb-0">
                     <span className="font-medium capitalize">{turn.role}</span>
@@ -271,19 +273,17 @@ export const WelcomeView = ({
                 setTranscript(null);
                 setShowTranscript(false);
               }}
-              className="text-muted-foreground mt-2 text-xs underline underline-offset-2"
+              className="text-muted-foreground mt-3 text-xs underline underline-offset-2"
             >
               Dismiss transcript
             </button>
           </div>
         )}
-      </section>
 
-      <div className="fixed bottom-5 left-0 flex w-full items-center justify-center">
-        <p className="text-muted-foreground max-w-prose pt-1 text-xs leading-5 font-normal text-pretty md:text-sm">
+        <p className="text-muted-foreground mt-8 max-w-prose text-xs leading-5 font-normal text-pretty md:text-sm">
           PDF or TXT — not a doctor. Scanned PDFs are OCR'd. Max 4 MB.
         </p>
-      </div>
+      </section>
     </div>
   );
 };

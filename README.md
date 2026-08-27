@@ -11,7 +11,7 @@ A real-time voice agent that handles **Hindi / Bengali ↔ English code-switchin
 | Transport | [LiveKit Cloud](https://cloud.livekit.io) |
 | Agent framework | [`livekit-agents`](https://docs.livekit.io/agents/) (Python) |
 | STT | [Sarvam](https://sarvam.ai) `saaras:v3` · `mode=codemix` |
-| LLM | [Groq](https://console.groq.com) `llama-3.1-8b-instant` (free-tier friendly) |
+| LLM | [Groq](https://console.groq.com) `openai/gpt-oss-20b` (free-tier friendly) |
 | TTS | Sarvam Bulbul `bulbul:v3` (speaker `priya`, `hi-IN`) |
 | Frontend | [agent-starter-react](https://github.com/livekit-examples/agent-starter-react) (lightly themed) |
 
